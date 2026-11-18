@@ -1,0 +1,4 @@
+demucs>=4.0.1
+gradio>=4.0
+torchaudio
+soundfile
