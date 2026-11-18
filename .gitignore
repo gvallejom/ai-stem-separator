@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+separated/
+demucs_output/
+*.zip
+*.wav
+*.mp3
+.ipynb_checkpoints/
+.DS_Store
