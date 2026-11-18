@@ -4,13 +4,11 @@ Upload any song and split it into its individual stems (**vocals, drums, bass an
 
 Built on top of Meta's [Demucs](https://github.com/facebookresearch/demucs) (`htdemucs`, Hybrid Transformer Demucs), with two ways to use it:
 
-- 🌐 **Web app** (Gradio): upload a song in the browser and listen to or download each stem.
+- 🌐 **[Live demo](https://huggingface.co/spaces/gvallejom/ai-stem-separator)** (Gradio on Hugging Face Spaces): upload a song in the browser and listen to or download each stem.
 - 📓 **Google Colab notebook**: run it on a free GPU, no installation needed.
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gvallejom/ai-stem-separator/blob/main/stem_separator.ipynb)
-<!-- Uncomment once the Space is live:
 [![Hugging Face Space](https://img.shields.io/badge/🤗%20Demo-Hugging%20Face%20Spaces-yellow)](https://huggingface.co/spaces/gvallejom/ai-stem-separator)
--->
 
 <!-- Add a screenshot or GIF of the app here -->
 <!-- ![Demo](docs/demo.gif) -->
@@ -41,13 +39,15 @@ Built on top of Meta's [Demucs](https://github.com/facebookresearch/demucs) (`ht
 ```bash
 git clone https://github.com/gvallejom/ai-stem-separator.git
 cd ai-stem-separator
-pip install -r requirements.txt
+pip install -r requirements.txt gradio
 python app.py
 ```
 
 Then open `http://127.0.0.1:7860` in your browser.
 
 > The first run downloads the model weights (~80 MB). On CPU, a 3–4 minute song takes a few minutes; with a GPU it takes seconds.
+>
+> The hosted demo runs on Hugging Face **ZeroGPU** (free shared GPU), using the `spaces.GPU` decorator in `app.py`.
 
 ## 📓 Run it in Google Colab
 

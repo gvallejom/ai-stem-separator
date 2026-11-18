@@ -5,36 +5,52 @@ Upload a song and get its stems (vocals, drums, bass, other) separated
 with Meta's Demucs (htdemucs model). Designed to run on Hugging Face Spaces.
 """
 
-import os
-import subprocess
-import sys
+# On Hugging Face ZeroGPU Spaces, `spaces.GPU` attaches a GPU while the
+# decorated function runs. It must be imported before torch.
+# Locally (no `spaces` package) it is a no-op.
+try:
+    import spaces
+
+    gpu = spaces.GPU(duration=60)
+except ImportError:
+    def gpu(fn):
+        return fn
+
 import tempfile
 import zipfile
 from pathlib import Path
 
 import gradio as gr
+import torch
+from demucs.separate import main as demucs_main
 
 MODEL = "htdemucs"
 FOUR_STEMS = ["vocals", "drums", "bass", "other"]
 TWO_STEMS = ["vocals", "no_vocals"]
 
 
+@gpu
 def separate(audio_path: str, mode: str):
     """Run Demucs on the uploaded file and return the stems plus a ZIP."""
     if not audio_path:
-        raise gr.Error("Sube un archivo de audio primero / Please upload an audio file first.")
+        raise gr.Error("Please upload an audio file first.")
 
     out_dir = Path(tempfile.mkdtemp(prefix="stems_"))
     two_stems = mode.startswith("2")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    cmd = [sys.executable, "-m", "demucs", "-n", MODEL, "-o", str(out_dir)]
+    args = ["-n", MODEL, "-o", str(out_dir), "-d", device]
     if two_stems:
-        cmd += ["--two-stems", "vocals"]
-    cmd.append(audio_path)
+        args += ["--two-stems", "vocals"]
+    args.append(audio_path)
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise gr.Error(f"Demucs failed:\n{result.stderr[-1000:]}")
+    try:
+        demucs_main(args)
+    except SystemExit as e:
+        if e.code not in (0, None):
+            raise gr.Error(f"Demucs failed (exit code {e.code}).")
+    except Exception as e:
+        raise gr.Error(f"Demucs failed: {e}")
 
     track_name = Path(audio_path).stem
     stem_dir = out_dir / MODEL / track_name
@@ -58,7 +74,7 @@ with gr.Blocks(title="AI Stem Separator") as demo:
         "# 🎛️ AI Stem Separator\n"
         "Upload a song and split it into **vocals, drums, bass and other** using "
         "[Demucs](https://github.com/facebookresearch/demucs) (`htdemucs`).\n\n"
-        "_Processing a 3–4 minute song can take a few minutes on CPU._"
+        "_Runs on a free shared GPU: a 3–4 minute song takes about a minute._"
     )
 
     with gr.Row():
